@@ -25,18 +25,15 @@
       const [nieuwDossier, setNieuwDossier] = useState({ naam: '', leeftijd: '', opmerkingen: '' });
       const [wijzigingen, setWijzigingen] = useState({});
 
-      // Lees arrestanten uit localStorage
       useEffect(() => {
         const data = localStorage.getItem('arrestanten');
         if (data) setArrestanten(JSON.parse(data));
       }, []);
 
-      // Sla arrestanten op in localStorage als ze veranderen
       useEffect(() => {
         localStorage.setItem('arrestanten', JSON.stringify(arrestanten));
       }, [arrestanten]);
 
-      // Update dossier als selectedId verandert
       useEffect(() => {
         if (!selectedId) {
           setDossier(null);
