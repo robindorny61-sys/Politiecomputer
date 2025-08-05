@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Politiecomputer Arrestantendossiers</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    button { cursor: pointer; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Politiecomputer Arrestantendossiers</h1>
+  <div id="root"></div>
+
+  <script type="text/javascript">
+    const e = React.createElement;
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [arrestanten, setArrestanten] = useState([]);
+      const [selectedId, setSelectedId] = useState(null);
+      const [dossier, setDossier] = useState(null);
+      const [nieuwDossier, setNieuwDossier] = useState({ naam: '', leeftijd: '', opmerkingen: '' });
+      const [wijzigingen, setWijzigingen] = useState({});
+
+      // Lees arrestanten uit localStorage
+      useEffect(() => {
+        const data = localStorage.getItem('arrestanten');
+        if (data) setArrestanten(JSON.parse(data));
+      }, []);
+
+      // Sla arrestanten op in localStorage als ze veranderen
+      useEffect(() => {
+        localStorage.setItem('arrestanten', JSON.stringify(arrestanten));
+      }, [arrestanten]);
+
+      // Update dossier als selectedId verandert
+      useEffect(() => {
+        if (!selectedId) {
+          setDossier(null);
+          return;
+        }
+        const found = arrestanten.find(a => a.id === selectedId);
+        setDossier(found || null);
+      }, [selectedId, arrestanten]);
+
+      function voegToe() {
+        if (!nieuwDossier.naam || !nieuwDossier.leeftijd) {
+          alert('Naam en leeftijd zijn verplicht');
+          return;
+        }
+        const id = Date.now().toString();
+        const nieuw = { ...nieuwDossier, id };
+        setArrestanten([...arrestanten, nieuw]);
+        setNieuwDossier({ naam: '', leeftijd: '', opmerkingen: '' });
+      }
+
+      function updateDossier() {
+        if (!selectedId) return;
+        const nieuweOpmerkingen = wijzigingen.opmerkingen || '';
+        setArrestanten(arrestanten.map(a => {
+          if (a.id === selectedId) {
+            return { ...a, opmerkingen: nieuweOpmerkingen };
+          }
+          return a;
+        }));
+        setWijzigingen({});
+      }
+
+      return e('div', { style: { display: 'flex', gap: '40px' } }, [
+        e('div', { style: { flex: 1 } }, [
+          e('h2', null, 'Arrestantenlijst'),
+          e('ul', null,
+            arrestanten.map(a =>
+              e('li', { key: a.id },
+                e('button', { onClick: () => setSelectedId(a.id) }, `${a.naam} (${a.leeftijd})`)
+              )
+            )
+          ),
+          e('h3', null, 'Nieuw dossier toevoegen'),
+          e('input', {
+            placeholder: 'Naam',
+            value: nieuwDossier.naam,
+            onChange: e => setNieuwDossier({ ...nieuwDossier, naam: e.target.value }),
+          }),
+          e('br'),
+          e('input', {
+            placeholder: 'Leeftijd',
+            type: 'number',
+            value: nieuwDossier.leeftijd,
+            onChange: e => setNieuwDossier({ ...nieuwDossier, leeftijd: e.target.value }),
+          }),
+          e('br'),
+          e('textarea', {
+            placeholder: 'Opmerkingen',
+            value: nieuwDossier.opmerkingen,
+            onChange: e => setNieuwDossier({ ...nieuwDossier, opmerkingen: e.target.value }),
+            rows: 3,
+            cols: 20
+          }),
+          e('br'),
+          e('button', { onClick: voegToe }, 'Voeg toe'),
+        ]),
+        e('div', { style: { flex: 2 } }, [
+          e('h2', null, 'Dossier details'),
+          !dossier && e('p', null, 'Selecteer een arrestant om details te bekijken'),
+          dossier && e('div', null, [
+            e('p', null, e('strong', null, 'Naam: '), dossier.naam),
+            e('p', null, e('strong', null, 'Leeftijd: '), dossier.leeftijd),
+            e('p', null, e('strong', null, 'Opmerkingen: '), dossier.opmerkingen || '-'),
+            e('h3', null, 'Dossier aanvullen'),
+            e('textarea', {
+              placeholder: 'Nieuwe opmerkingen',
+              rows: 3,
+              cols: 40,
+              onChange: e => setWijzigingen({ opmerkingen: e.target.value }),
+              value: wijzigingen.opmerkingen || '',
+            }),
+            e('br'),
+            e('button', { onClick: updateDossier }, 'Bewaar wijzigingen'),
+          ])
+        ]),
+      ]);
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+  </script>
+</body>
+</html>
