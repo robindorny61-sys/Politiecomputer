@@ -2,127 +2,175 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Politiecomputer Arrestantendossiers</title>
+  <title>Politiecomputer – Arrestantendossiers</title>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    button { cursor: pointer; margin-top: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #1a1a1a;
+      color: #f2f2f2;
+    }
+    h1, h2, h3 {
+      color: #00ccff;
+    }
+    input, select, textarea, button {
+      margin: 5px 0;
+      padding: 8px;
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+    }
+    input, select, textarea {
+      background-color: #2b2b2b;
+      color: #f2f2f2;
+    }
+    button {
+      background-color: #00ccff;
+      color: black;
+      font-weight: bold;
+    }
+    .container {
+      display: flex;
+      gap: 30px;
+    }
+    .panel {
+      flex: 1;
+      background-color: #2b2b2b;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li button {
+      background: none;
+      color: #00ccff;
+      text-align: left;
+      padding: 4px 0;
+      border: none;
+      cursor: pointer;
+    }
+    .label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    hr {
+      border: 1px solid #444;
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
-  <h1>Politiecomputer Arrestantendossiers</h1>
-  <div id="root"></div>
+  <h1>👮 Politiecomputer – Arrestantendossiers</h1>
+  <div class="container">
+    <div class="panel">
+      <h2>📋 Arrestantenlijst</h2>
+      <ul id="lijst"></ul>
 
-  <script type="text/javascript">
-    const e = React.createElement;
-    const { useState, useEffect } = React;
+      <hr />
+      <h3>➕ Nieuw dossier toevoegen</h3>
+      <input id="naam" placeholder="Naam" />
+      <input id="geboortedatum" type="date" />
+      <input id="arrestatieDatum" type="date" />
+      <input id="delict" placeholder="Delict (bv. Diefstal)" />
+      <input id="straf" placeholder="Straf (bv. 12 maanden)" />
+      <select id="status">
+        <option value="In afwachting">In afwachting</option>
+        <option value="Veroordeeld">Veroordeeld</option>
+        <option value="Vrijgelaten">Vrijgelaten</option>
+      </select>
+      <textarea id="opmerkingen" placeholder="Opmerkingen" rows="3"></textarea>
+      <button onclick="voegToe()">Toevoegen</button>
+    </div>
 
-    function App() {
-      const [arrestanten, setArrestanten] = useState([]);
-      const [selectedId, setSelectedId] = useState(null);
-      const [dossier, setDossier] = useState(null);
-      const [nieuwDossier, setNieuwDossier] = useState({ naam: '', leeftijd: '', opmerkingen: '' });
-      const [wijzigingen, setWijzigingen] = useState({});
+    <div class="panel">
+      <h2>📄 Dossierdetails</h2>
+      <div id="dossierDetails">Selecteer een arrestant om het dossier te bekijken.</div>
+    </div>
+  </div>
 
-      useEffect(() => {
-        const data = localStorage.getItem('arrestanten');
-        if (data) setArrestanten(JSON.parse(data));
-      }, []);
+  <script>
+    let arrestanten = JSON.parse(localStorage.getItem('arrestanten')) || [];
+    let geselecteerd = null;
 
-      useEffect(() => {
-        localStorage.setItem('arrestanten', JSON.stringify(arrestanten));
-      }, [arrestanten]);
-
-      useEffect(() => {
-        if (!selectedId) {
-          setDossier(null);
-          return;
-        }
-        const found = arrestanten.find(a => a.id === selectedId);
-        setDossier(found || null);
-      }, [selectedId, arrestanten]);
-
-      function voegToe() {
-        if (!nieuwDossier.naam || !nieuwDossier.leeftijd) {
-          alert('Naam en leeftijd zijn verplicht');
-          return;
-        }
-        const id = Date.now().toString();
-        const nieuw = { ...nieuwDossier, id };
-        setArrestanten([...arrestanten, nieuw]);
-        setNieuwDossier({ naam: '', leeftijd: '', opmerkingen: '' });
-      }
-
-      function updateDossier() {
-        if (!selectedId) return;
-        const nieuweOpmerkingen = wijzigingen.opmerkingen || '';
-        setArrestanten(arrestanten.map(a => {
-          if (a.id === selectedId) {
-            return { ...a, opmerkingen: nieuweOpmerkingen };
-          }
-          return a;
-        }));
-        setWijzigingen({});
-      }
-
-      return e('div', { style: { display: 'flex', gap: '40px' } }, [
-        e('div', { style: { flex: 1 } }, [
-          e('h2', null, 'Arrestantenlijst'),
-          e('ul', null,
-            arrestanten.map(a =>
-              e('li', { key: a.id },
-                e('button', { onClick: () => setSelectedId(a.id) }, `${a.naam} (${a.leeftijd})`)
-              )
-            )
-          ),
-          e('h3', null, 'Nieuw dossier toevoegen'),
-          e('input', {
-            placeholder: 'Naam',
-            value: nieuwDossier.naam,
-            onChange: e => setNieuwDossier({ ...nieuwDossier, naam: e.target.value }),
-          }),
-          e('br'),
-          e('input', {
-            placeholder: 'Leeftijd',
-            type: 'number',
-            value: nieuwDossier.leeftijd,
-            onChange: e => setNieuwDossier({ ...nieuwDossier, leeftijd: e.target.value }),
-          }),
-          e('br'),
-          e('textarea', {
-            placeholder: 'Opmerkingen',
-            value: nieuwDossier.opmerkingen,
-            onChange: e => setNieuwDossier({ ...nieuwDossier, opmerkingen: e.target.value }),
-            rows: 3,
-            cols: 20
-          }),
-          e('br'),
-          e('button', { onClick: voegToe }, 'Voeg toe'),
-        ]),
-        e('div', { style: { flex: 2 } }, [
-          e('h2', null, 'Dossier details'),
-          !dossier && e('p', null, 'Selecteer een arrestant om details te bekijken'),
-          dossier && e('div', null, [
-            e('p', null, e('strong', null, 'Naam: '), dossier.naam),
-            e('p', null, e('strong', null, 'Leeftijd: '), dossier.leeftijd),
-            e('p', null, e('strong', null, 'Opmerkingen: '), dossier.opmerkingen || '-'),
-            e('h3', null, 'Dossier aanvullen'),
-            e('textarea', {
-              placeholder: 'Nieuwe opmerkingen',
-              rows: 3,
-              cols: 40,
-              onChange: e => setWijzigingen({ opmerkingen: e.target.value }),
-              value: wijzigingen.opmerkingen || '',
-            }),
-            e('br'),
-            e('button', { onClick: updateDossier }, 'Bewaar wijzigingen'),
-          ])
-        ]),
-      ]);
+    function opslaan() {
+      localStorage.setItem('arrestanten', JSON.stringify(arrestanten));
+      toonLijst();
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+    function toonLijst() {
+      const lijst = document.getElementById('lijst');
+      lijst.innerHTML = '';
+      arrestanten.forEach((a, i) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.textContent = `${a.naam} (${a.status})`;
+        btn.onclick = () => toonDossier(i);
+        li.appendChild(btn);
+        lijst.appendChild(li);
+      });
+    }
+
+    function toonDossier(index) {
+      geselecteerd = index;
+      const a = arrestanten[index];
+      const el = document.getElementById('dossierDetails');
+      el.innerHTML = `
+        <div class="label">Naam:</div> ${a.naam}
+        <div class="label">Geboortedatum:</div> ${a.geboortedatum}
+        <div class="label">Datum van arrestatie:</div> ${a.arrestatieDatum}
+        <div class="label">Delict:</div> ${a.delict}
+        <div class="label">Straf:</div> ${a.straf}
+        <div class="label">Status:</div>
+        <select id="statusUpdate">
+          <option value="In afwachting" ${a.status === 'In afwachting' ? 'selected' : ''}>In afwachting</option>
+          <option value="Veroordeeld" ${a.status === 'Veroordeeld' ? 'selected' : ''}>Veroordeeld</option>
+          <option value="Vrijgelaten" ${a.status === 'Vrijgelaten' ? 'selected' : ''}>Vrijgelaten</option>
+        </select>
+        <div class="label">Opmerkingen:</div>
+        <textarea id="opmUpdate" rows="3">${a.opmerkingen}</textarea>
+        <br />
+        <button onclick="updateDossier()">Wijzigingen opslaan</button>
+      `;
+    }
+
+    function voegToe() {
+      const naam = document.getElementById('naam').value;
+      const geboortedatum = document.getElementById('geboortedatum').value;
+      const arrestatieDatum = document.getElementById('arrestatieDatum').value;
+      const delict = document.getElementById('delict').value;
+      const straf = document.getElementById('straf').value;
+      const status = document.getElementById('status').value;
+      const opmerkingen = document.getElementById('opmerkingen').value;
+
+      if (!naam || !geboortedatum || !arrestatieDatum || !delict || !straf) {
+        alert("Vul alle verplichte velden in.");
+        return;
+      }
+
+      arrestanten.push({ naam, geboortedatum, arrestatieDatum, delict, straf, status, opmerkingen });
+      opslaan();
+
+      // Velden leegmaken
+      ['naam', 'geboortedatum', 'arrestatieDatum', 'delict', 'straf', 'opmerkingen'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    function updateDossier() {
+      const status = document.getElementById('statusUpdate').value;
+      const opmerkingen = document.getElementById('opmUpdate').value;
+      if (geselecteerd !== null) {
+        arrestanten[geselecteerd].status = status;
+        arrestanten[geselecteerd].opmerkingen = opmerkingen;
+        opslaan();
+        toonDossier(geselecteerd);
+      }
+    }
+
+    toonLijst();
   </script>
 </body>
 </html>
